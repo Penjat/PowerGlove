@@ -51,11 +51,19 @@ static const unsigned char PROGMEM logo_bmp[] =
   B01111100, B11110000,
   B01110000, B01110000,
   B00000000, B00110000 };
+  
+const int sensorPin0 = A0;
+const int sensorPin1 = A1;
+const int sensorPin2 = A2;
+const int sensorPin3 = A3;
 
-const int sensorPin = A3;  // pin where your sensor is connected
-int sensorValue = 0; 
-int minValue = 1023;  // initialize to the maximum possible value
-int maxValue = 0;
+int sensorValue0 = 0; 
+int sensorValue1 = 0; 
+int sensorValue2 = 0; 
+int sensorValue3 = 0; 
+
+int minValue = 400;  // initialize to the maximum possible value
+int maxValue = 500;
 
 
 void setup() {
@@ -79,7 +87,7 @@ void setup() {
 //  display.drawPixel(10, 10, SSD1306_WHITE);
 
 
-  display.setTextSize(4);             // Normal 1:1 pixel scale
+  display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
   display.setCursor(0,0);             // Start at top-left corner
   display.println(F("Hello, assmass!"));
@@ -87,23 +95,38 @@ void setup() {
 }
 
 void loop() {
-  sensorValue = analogRead(sensorPin);
+  sensorValue0 = analogRead(sensorPin0);
+  sensorValue1 = analogRead(sensorPin1);
+  sensorValue2 = analogRead(sensorPin2);
+  sensorValue3 = analogRead(sensorPin3);
+  
+//  Serial.println(sensorValue1);
 
-  if (sensorValue < minValue) {
-    minValue = sensorValue;
-  }
-
-  // Check if this reading is a new maximum
-  if (sensorValue > maxValue) {
-    maxValue = sensorValue;
-  }
+  
   
   display.clearDisplay();
   display.setCursor(0,0); 
-  display.println((sensorValue-minValue)*100/(maxValue-minValue));
-  display.display();
-  delay(250);
+//  display.println((sensorValue-minValue)*100/(maxValue-minValue));
+  display.println(sensorValue0);
+  display.println(sensorValue1);
+  display.println(sensorValue2);
+  display.println(sensorValue3);
+
+  Serial.println("--------------------");
+  Serial.println(sensorValue0);
+  Serial.println(sensorValue1);
+  Serial.println(sensorValue2);
+  Serial.println(sensorValue3);
+//  display.display();
+  
+//  for(int16_t i=0; i<display.height()/2; i+=2) {
+//    display.drawRect(0, 0, display.width()*(sensorValue-minValue)/(maxValue-minValue), display.height()-2, SSD1306_WHITE);
+    display.display(); // Update screen with each newly-drawn rectangle
+    delay(500);
 }
+
+
+
 //
 //void testdrawline() {
 //  int16_t i;
