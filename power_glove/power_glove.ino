@@ -6,6 +6,20 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 
+#define BUTTON_PIN_0 10
+#define BUTTON_PIN_1 11
+#define BUTTON_PIN_2 12
+
+// Rotary Encoder Inputs
+#define CLK 2
+#define DT 3
+
+
+int counter = 0;
+int currentStateCLK;
+int lastStateCLK;
+String currentDir = "";
+
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -20,6 +34,10 @@ int sensorValue1 = 0;
 int sensorValue2 = 0;
 int sensorValue3 = 0;
 
+byte buttonState0 = 0;
+byte buttonState1 = 0;
+byte buttonState2 = 0;
+
 int max_1 = 700;
 int min_1 = 400;
 
@@ -28,12 +46,18 @@ int min_2 = 400;
 
 void setup() {
   Serial.begin(9600);
+  pinMode(CLK, INPUT_PULLUP);
+  pinMode(DT, INPUT);
+  lastStateCLK = digitalRead(CLK);
+  attachInterrupt(0, updateEncoder, CHANGE);
+  attachInterrupt(1, updateEncoder, CHANGE);
   setUpLCD();
+  setUpButtons();
 }
 
 void loop() {
   updateSensors();
-  
+
   if (sensorValue1 > max_1) {
     max_1 = sensorValue1;
   }
@@ -47,7 +71,7 @@ void loop() {
   if (sensorValue2 < min_2 && sensorValue0 > 0) {
     min_2 = sensorValue0;
   }
-  
+
   updateDisplay();
 }
 
@@ -59,11 +83,21 @@ void setUpLCD() {
   }
 }
 
+void setUpButtons() {
+  pinMode(BUTTON_PIN_0, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_1, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_2, INPUT_PULLUP);
+}
+
 void updateSensors() {
   sensorValue0 = analogRead(sensorPin0);
   sensorValue1 = analogRead(sensorPin1);
   sensorValue2 = analogRead(sensorPin2);
   sensorValue3 = analogRead(sensorPin3);
+
+  buttonState0 = digitalRead(BUTTON_PIN_0);
+  buttonState1 = digitalRead(BUTTON_PIN_1);
+  buttonState2 = digitalRead(BUTTON_PIN_2);
 }
 
 void updateDisplay() {
@@ -75,33 +109,59 @@ void updateDisplay() {
   display.drawRect(0, 0, display.width() / 2, display.height() / 2, SSD1306_WHITE);
   display.drawRect(0, display.height() / 2, display.width() / 2, display.height() / 2, SSD1306_WHITE);
 
-  display.fillRect(0, 0, (display.width() / 2) * (sensorValue1 - min_1)/(max_1 - min_1), display.height() / 2, SSD1306_WHITE);
-  display.fillRect(0, display.height() / 2, (display.width() / 2) * (sensorValue0 - min_2)/(max_2 - min_2), display.height() / 2, SSD1306_WHITE);
+  display.fillRect(0, 0, (display.width() / 2) * (sensorValue1 - min_1) / (max_1 - min_1), display.height() / 2, SSD1306_WHITE);
+  display.fillRect(0, display.height() / 2, (display.width() / 2) * (sensorValue0 - min_2) / (max_2 - min_2), display.height() / 2, SSD1306_WHITE);
 
-  display.drawCircle(display.width() / 2 + 12, 10, 10, SSD1306_WHITE);
-  display.drawCircle(display.width() / 2 + 32, 10, 10, SSD1306_WHITE);
-  display.fillCircle(display.width() / 2 + 52, 10, 10, SSD1306_WHITE);
 
   // Draw button text
   display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);
-  
+
+
+  // A
+  if (buttonState1 == LOW) {
+    display.setTextColor(SSD1306_BLACK);
+    display.fillCircle(display.width() / 2 + 12, 10, 10, SSD1306_WHITE);
+  }
+  else {
+    display.setTextColor(SSD1306_WHITE);
+    display.drawCircle(display.width() / 2 + 12, 10, 10, SSD1306_WHITE);
+
+  }
   display.setCursor(72, 4);
   display.println(F("A"));
+
+  // B
+  if (buttonState2 == LOW) {
+    display.setTextColor(SSD1306_BLACK);
+    display.fillCircle(display.width() / 2 + 32, 10, 10, SSD1306_WHITE);
+  }
+  else {
+    display.setTextColor(SSD1306_WHITE);
+    display.drawCircle(display.width() / 2 + 32, 10, 10, SSD1306_WHITE);
+
+  }
   display.setCursor(92, 4);
   display.println(F("B"));
-  display.setTextColor(SSD1306_BLACK);
+
+  // C
+  if (buttonState0 == LOW) {
+    display.setTextColor(SSD1306_BLACK);
+    display.fillCircle(display.width() / 2 + 52, 10, 10, SSD1306_WHITE);
+  }
+  else {
+    display.setTextColor(SSD1306_WHITE);
+    display.drawCircle(display.width() / 2 + 52, 10, 10, SSD1306_WHITE);
+
+  }
   display.setCursor(112, 4);
   display.println(F("C"));
 
-  display.setCursor(0, 0);
-  //  display.println((sensorValue-minValue)*100/(maxValue-minValue));
 
-  //  display.println(sensorValue2);
-  //  display.println(sensorValue3);
+  display.setCursor(0, 0);
+
 
   display.setTextSize(1);
-  //  display.setTextColor(SSD1306_WHITE);
+
   display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
   display.setCursor(0, 0);
   display.println(F("THUMB"));
@@ -111,6 +171,10 @@ void updateDisplay() {
   display.setCursor(0, 16);
   display.println(F("INDEX"));
   //  display.println(sensorValue0);
+
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(80, 24);
+  display.println(counter);
 
 
 
@@ -149,4 +213,33 @@ void updateDisplay() {
   //  display.startscrolldiagleft(0x00, 0x07);
   //  delay(2000);
   //  display.stopscroll();
+}
+
+void updateEncoder() {
+  // Read the current state of CLK
+  currentStateCLK = digitalRead(CLK);
+
+  // If last and current state of CLK are different, then pulse occurred
+  // React to only 1 state change to avoid double count
+  if (currentStateCLK != lastStateCLK  && currentStateCLK == 1) {
+
+    // If the DT state is different than the CLK state then
+    // the encoder is rotating CCW so decrement
+    if (digitalRead(DT) != currentStateCLK) {
+      counter --;
+      currentDir = "CCW";
+    } else {
+      // Encoder is rotating CW so increment
+      counter ++;
+      currentDir = "CW";
+    }
+
+    Serial.print("Direction: ");
+    Serial.print(currentDir);
+    Serial.print(" | Counter: ");
+    Serial.println(counter);
+  }
+
+  // Remember last CLK state
+  lastStateCLK = currentStateCLK;
 }
