@@ -1,6 +1,6 @@
 // Rotary Encoder Inputs
-#define CLK 5
-#define DT 6
+#define CLK 3
+#define DT 2
 
 int counter = 0;
 int currentStateCLK;
@@ -10,7 +10,7 @@ String currentDir ="";
 void setup() {
 
   // Set encoder pins as inputs
-  pinMode(CLK,INPUT);
+  pinMode(CLK,INPUT_PULLUP);
   pinMode(DT,INPUT);
 
   // Setup Serial Monitor
