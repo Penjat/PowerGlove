@@ -2,41 +2,40 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+ #include <MPU6050_light.h>
+#include <Adafruit_Sensor.h>
+#include <SoftwareSerial.h>
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+// Bluetooth
+SoftwareSerial hm10(6, 8);
 
+// LCD
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 32
+#define OLED_RESET     4
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// Buttons
 #define BUTTON_PIN_0 10
 #define BUTTON_PIN_1 11
 #define BUTTON_PIN_2 12
 
-// Rotary Encoder Inputs
-#define CLK 2
-#define DT 3
+byte buttonState0 = 0;
+byte buttonState1 = 0;
+byte buttonState2 = 0;
 
 
-int counter = 0;
-int currentStateCLK;
-int lastStateCLK;
-String currentDir = "";
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-const int sensorPin0 = A0;
-const int sensorPin1 = A1;
-const int sensorPin2 = A2;
-const int sensorPin3 = A3;
+// Finger sensors
+#define sensorPin0 A0
+#define sensorPin1 A1
+#define sensorPin2 A2
+#define sensorPin3 A3
 
 int sensorValue0 = 0;
 int sensorValue1 = 0;
 int sensorValue2 = 0;
 int sensorValue3 = 0;
-
-byte buttonState0 = 0;
-byte buttonState1 = 0;
-byte buttonState2 = 0;
 
 int max_1 = 700;
 int min_1 = 400;
@@ -44,35 +43,54 @@ int min_1 = 400;
 int max_2 = 700;
 int min_2 = 400;
 
+int max_3 = 700;
+int min_3 = 400;
+
+
+// Rotary Encoder
+#define CLK 2
+#define DT 3
+
+int counter = 0;
+int currentStateCLK;
+int lastStateCLK;
+//String currentDir = "";
+
+
+// Gyro
+MPU6050 mpu(Wire);
+//sensors_event_t a, g, temp;
+
+// ----------------- SETUP -----------------
 void setup() {
   Serial.begin(9600);
+  hm10.begin(9600);
+  Wire.begin();
+
+  setUpGyro();
+  setUpLCD();
+  setUpRotaryEncoder();
+  setUpButtons();
+}
+
+void setUpRotaryEncoder() {
   pinMode(CLK, INPUT_PULLUP);
   pinMode(DT, INPUT);
   lastStateCLK = digitalRead(CLK);
   attachInterrupt(0, updateEncoder, CHANGE);
   attachInterrupt(1, updateEncoder, CHANGE);
-  setUpLCD();
-  setUpButtons();
 }
 
-void loop() {
-  updateSensors();
+void setUpGyro() {
+  byte status = mpu.begin();
+   Serial.print(F("MPU6050 status: "));
+   Serial.println(status);
+   while (status != 0) { } // stop everything if could not connect to MPU6050
+  Serial.println(F("Calculating offsets, do not move MPU6050"));
+   delay(1000);
+   mpu.calcOffsets(); // gyro and accelero
+   Serial.println("Done!\n");
 
-  if (sensorValue1 > max_1) {
-    max_1 = sensorValue1;
-  }
-  if (sensorValue1 < min_1 && sensorValue1 > 0) {
-    min_1 = sensorValue1;
-  }
-
-  if (sensorValue0 > max_2) {
-    max_2 = sensorValue0;
-  }
-  if (sensorValue2 < min_2 && sensorValue0 > 0) {
-    min_2 = sensorValue0;
-  }
-
-  updateDisplay();
 }
 
 void setUpLCD() {
@@ -89,7 +107,39 @@ void setUpButtons() {
   pinMode(BUTTON_PIN_2, INPUT_PULLUP);
 }
 
+// ----------------- LOOP -----------------
+
+void loop() {
+  updateSensors();
+  updateCalibration();
+  updateDisplay();
+  sendSensorData();
+
+  //  char buffer[10]; // Buffer to hold the ASCII representation of the int
+  //
+  //  // Convert int to char array and send it through SoftwareSerial
+  //  itoa(sensorValue0, buffer, 10);
+  //  hm10.write(buffer);
+
+  //  int mappedValue = map(sensorValue0, min_2, max_2, 0, 255);
+  //  String hexString = String(mappedValue, HEX);
+  //  if (hexString.length() == 1) hexString = "0" + hexString;
+  //
+  //  int mappedValue1 = map(sensorValue1, min_1, max_1, 0, 255);
+  //  String hexString1 = String(mappedValue1, HEX);
+  //  if (hexString1.length() == 1) hexString1 = "0" + hexString1;
+
+
+  //  hm10.print(hexString+hexString1);
+
+
+  delay(100);
+}
+
 void updateSensors() {
+
+  mpu.update();
+
   sensorValue0 = analogRead(sensorPin0);
   sensorValue1 = analogRead(sensorPin1);
   sensorValue2 = analogRead(sensorPin2);
@@ -100,17 +150,103 @@ void updateSensors() {
   buttonState2 = digitalRead(BUTTON_PIN_2);
 }
 
+void updateCalibration() {
+  if (sensorValue1 > max_1) {
+    max_1 = sensorValue1;
+  }
+  if (sensorValue1 < min_1 && sensorValue1 > 0) {
+    min_1 = sensorValue1;
+  }
+
+  if (sensorValue0 > max_2) {
+    max_2 = sensorValue0;
+  }
+  if (sensorValue0 < min_2 && sensorValue0 > 0) {
+    min_2 = sensorValue0;
+  }
+
+  if (sensorValue2 > max_3) {
+    max_3 = sensorValue2;
+  }
+  if (sensorValue2 < min_3 && sensorValue2 > 0) {
+    min_3 = sensorValue2;
+  }
+
+}
+
+void updateEncoder() {
+  // Read the current state of CLK
+  currentStateCLK = digitalRead(CLK);
+
+  if (currentStateCLK != lastStateCLK  && currentStateCLK == 1) {
+
+    if (digitalRead(DT) != currentStateCLK) {
+      counter --;
+//      currentDir = "CCW";
+    } else {
+      // Encoder is rotating CW so increment
+      counter ++;
+//      currentDir = "CW";
+    }
+
+    Serial.print("Direction: ");
+//    Serial.print(currentDir);
+    Serial.print(" | Counter: ");
+    Serial.println(counter);
+  }
+
+  // Remember last CLK state
+  lastStateCLK = currentStateCLK;
+}
+
+void sendSensorData() {
+
+  byte data[12]; 
+
+  // Start Marker
+  data[0] = 0x02;
+  
+  data[1] = map(sensorValue0, min_2, max_2, 0, 255);
+  data[2] = map(sensorValue1, min_1, max_1, 0, 255);
+  data[3] = map(sensorValue2, min_3, max_3, 0, 255);
+  data[4] = (buttonState0 << 2) | (buttonState1 << 1) | buttonState2;
+
+  data[5] = map(mpu.getAngleX(), -180, 180, 0, 255);
+  data[6] = map(mpu.getAngleY(), -180, 180, 0, 255);
+  data[7] = map(mpu.getAngleZ(), -180, 180, 0, 255);
+  data[8] = mpu.getAccX();
+  data[9] = mpu.getAccY();
+  data[10] = mpu.getAccZ();
+
+  // End marker
+  data[11] = 0x03;
+
+  hm10.write(data, 12);
+}
+
+
 void updateDisplay() {
+  if (counter % 2 == 0) {
+    buttonsDisplay();
+  } else {
+    gyroDisplay();
+  }
+}
+ 
+
+// ----------------- DISPLAYS -----------------
+
+
+void buttonsDisplay() {
   display.clearDisplay();
+  display.drawRect(0, 0, display.width() / 2, display.height() / 3, SSD1306_WHITE);
+  display.drawRect(0, display.height() / 3, display.width() / 2, display.height() / 3, SSD1306_WHITE);
+  display.drawRect(0, (display.height() / 3) * 2 , display.width() / 2, display.height() / 3, SSD1306_WHITE);
 
+  display.fillRect(0, 0, (display.width() / 2) * (sensorValue1 - min_1) / (max_1 - min_1), display.height() / 3, SSD1306_WHITE);
+  display.fillRect(0, display.height() / 3, (display.width() / 2) * (sensorValue0 - min_2) / (max_2 - min_2), display.height() / 3, SSD1306_WHITE);
+  display.fillRect(0, (display.height() / 3) * 2, (display.width() / 2) * (sensorValue2 - min_2) / (max_2 - min_2), display.height() / 3, SSD1306_WHITE);
 
-
-
-  display.drawRect(0, 0, display.width() / 2, display.height() / 2, SSD1306_WHITE);
-  display.drawRect(0, display.height() / 2, display.width() / 2, display.height() / 2, SSD1306_WHITE);
-
-  display.fillRect(0, 0, (display.width() / 2) * (sensorValue1 - min_1) / (max_1 - min_1), display.height() / 2, SSD1306_WHITE);
-  display.fillRect(0, display.height() / 2, (display.width() / 2) * (sensorValue0 - min_2) / (max_2 - min_2), display.height() / 2, SSD1306_WHITE);
 
 
   // Draw button text
@@ -163,83 +299,42 @@ void updateDisplay() {
   display.setTextSize(1);
 
   display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
-  display.setCursor(0, 0);
-  display.println(F("THUMB"));
-  //  display.println(sensorValue1);
-
-
-  display.setCursor(0, 16);
-  display.println(F("INDEX"));
+  //  display.setCursor(0, 0);
+  //  display.println(F("THUMB"));
+  //  //  display.println(sensorValue1);
+  //
+  //
+  //  display.setCursor(0, 16);
+  //  display.println(F("INDEX"));
   //  display.println(sensorValue0);
 
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(80, 24);
   display.println(counter);
-
-
-
-  //  display.invertDisplay(true);
-  // Draw a single pixel in white
-  //  display.drawPixel(10, 10, SSD1306_WHITE);
-  //  display.fillRect(i, i, display.width()-i*2, display.height()-i*2, SSD1306_INVERSE);
-  //  for(int16_t i=0; i<display.height()/2; i+=2) {
-  //    display.drawRect(0, 0, display.width()*(sensorValue-minValue)/(maxValue-minValue), display.height()-2, SSD1306_WHITE);
-  //  display.drawRoundRect(i, i, display.width()-2*i, display.height()-2*i,
-  //      display.height()/4, SSD1306_WHITE);
-  //    display.fillRoundRect(i, i, display.width()-2*i, display.height()-2*i,
-  //      display.height()/4, SSD1306_INVERSE);
-  //display.fillTriangle(
-  //      display.width()/2  , display.height()/2-i,
-  //      display.width()/2-i, display.height()/2+i,
-  //      display.width()/2+i, display.height()/2+i, SSD1306_INVERSE);
-  //  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
-  //  display.drawBitmap(
-  //    (display.width()  - LOGO_WIDTH ) / 2,
-  //    (display.height() - LOGO_HEIGHT) / 2,
-  //    logo_bmp, LOGO_WIDTH, LOGO_HEIGHT, 1);
-  //  display.drawLine(0, 0, display.width() - 1, i, SSD1306_WHITE);
   display.display();
-  //  display.drawCircle(display.width() / 2, display.height() / 2, i, SSD1306_WHITE);
-  //  display.startscrollright(0x00, 0x0F);
-  //  delay(2000);
-  //  display.stopscroll();
-  //  delay(1000);
-  //  display.startscrollleft(0x00, 0x0F);
-  //  delay(2000);
-  //  display.stopscroll();
-  //  delay(1000);
-  //  display.startscrolldiagright(0x00, 0x07);
-  //  delay(2000);
-  //  display.startscrolldiagleft(0x00, 0x07);
-  //  delay(2000);
-  //  display.stopscroll();
 }
 
-void updateEncoder() {
-  // Read the current state of CLK
-  currentStateCLK = digitalRead(CLK);
+void gyroDisplay() {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
 
-  // If last and current state of CLK are different, then pulse occurred
-  // React to only 1 state change to avoid double count
-  if (currentStateCLK != lastStateCLK  && currentStateCLK == 1) {
+  display.setCursor(0, 0);
+//  display.println(g.gyro.x);
+//
+//  display.setCursor(45, 0);
+//  display.println(g.gyro.y);
+//
+//  display.setCursor(90, 0);
+//  display.println(g.gyro.z);
+//
+//  display.setCursor(0, 20);
+//  display.println(g.acceleration.x);
+//  display.setCursor(45, 20);
+//  display.println(g.acceleration.y);
+//  display.setCursor(90, 20);
+//  display.println(g.acceleration.z);
 
-    // If the DT state is different than the CLK state then
-    // the encoder is rotating CCW so decrement
-    if (digitalRead(DT) != currentStateCLK) {
-      counter --;
-      currentDir = "CCW";
-    } else {
-      // Encoder is rotating CW so increment
-      counter ++;
-      currentDir = "CW";
-    }
 
-    Serial.print("Direction: ");
-    Serial.print(currentDir);
-    Serial.print(" | Counter: ");
-    Serial.println(counter);
-  }
+  display.display();
 
-  // Remember last CLK state
-  lastStateCLK = currentStateCLK;
 }

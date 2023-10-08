@@ -1,4 +1,4 @@
-const int sensorPin = A3;  // pin where your sensor is connected
+const int sensorPin = A1;  // pin where your sensor is connected
 int sensorValue = 0; 
 int minValue = 1023;  // initialize to the maximum possible value
 int maxValue = 0;     // initialize to the minimum possible value
