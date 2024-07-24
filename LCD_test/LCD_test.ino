@@ -52,28 +52,19 @@ static const unsigned char PROGMEM logo_bmp[] =
   B01110000, B01110000,
   B00000000, B00110000 };
   
-const int sensorPin0 = A0;
-const int sensorPin1 = A1;
-const int sensorPin2 = A2;
-const int sensorPin3 = A3;
 
-int sensorValue0 = 0; 
-int sensorValue1 = 0; 
-int sensorValue2 = 0; 
-int sensorValue3 = 0; 
-
-int minValue = 400;  // initialize to the maximum possible value
-int maxValue = 500;
 
 
 void setup() {
   Serial.begin(9600);
-
+  Serial.println(F("starting up..."));
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
+
+  Serial.println(F("found lcd"));
 
   // Show initial display buffer contents on the screen --
   // the library initializes this with an Adafruit splash screen.
@@ -95,28 +86,15 @@ void setup() {
 }
 
 void loop() {
-  sensorValue0 = analogRead(sensorPin0);
-  sensorValue1 = analogRead(sensorPin1);
-  sensorValue2 = analogRead(sensorPin2);
-  sensorValue3 = analogRead(sensorPin3);
-  
-//  Serial.println(sensorValue1);
+ 
 
   
   
   display.clearDisplay();
   display.setCursor(0,0); 
 //  display.println((sensorValue-minValue)*100/(maxValue-minValue));
-  display.println(sensorValue0);
-  display.println(sensorValue1);
-  display.println(sensorValue2);
-  display.println(sensorValue3);
+  display.println("hello");
 
-  Serial.println("--------------------");
-  Serial.println(sensorValue0);
-  Serial.println(sensorValue1);
-  Serial.println(sensorValue2);
-  Serial.println(sensorValue3);
 //  display.display();
   
 //  for(int16_t i=0; i<display.height()/2; i+=2) {
