@@ -71,6 +71,7 @@
 		1ADC4DC62C9FC79700E57BB9 /* GloveStatusViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A80A2402ABDD2C9004A3622 /* GloveStatusViewModel.swift */; };
 		1ADC4DC72C9FC79A00E57BB9 /* GloveStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A80A23E2ABDD2A5004A3622 /* GloveStatusView.swift */; };
 		1ADC4DCA2C9FC81400E57BB9 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC4DC92C9FC81400E57BB9 /* AppState.swift */; };
+		1ADC4DCE2C9FD20800E57BB9 /* SynthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ADC4DCD2C9FD20800E57BB9 /* SynthView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,6 +129,7 @@
 		1A918D822C9FC1F000F023AD /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		1A918D842C9FC1F000F023AD /* PowerGloveConnectMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PowerGloveConnectMac.entitlements; sourceTree = "<group>"; };
 		1ADC4DC92C9FC81400E57BB9 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		1ADC4DCD2C9FD20800E57BB9 /* SynthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynthView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,6 +215,7 @@
 				1A80A2512ABFCE3C004A3622 /* CircleDialView.swift */,
 				1A73DBFE2AC9FE4B005F833E /* FrequencyView.swift */,
 				1A73DC1B2ACA52A1005F833E /* PitchArchView.swift */,
+				1A73DBF12AC942E8005F833E /* Glove Status */,
 			);
 			path = "UI Components";
 			sourceTree = "<group>";
@@ -223,7 +226,6 @@
 				1A80A2262ABD31EB004A3622 /* ContentView.swift */,
 				1A73DBF92AC9F965005F833E /* TitleView.swift */,
 				1A73DBFB2AC9FCD0005F833E /* SynthTest */,
-				1A73DBF12AC942E8005F833E /* Glove Status */,
 				1A73DBF02AC9427D005F833E /* GloveSynth */,
 			);
 			path = UX;
@@ -312,7 +314,6 @@
 			children = (
 				1A73DBEE2AC94130005F833E /* Application */,
 				1A73DBF32AC9437B005F833E /* UX */,
-				1A73DBF42AC943AA005F833E /* Utility */,
 				1A80A2282ABD31F2004A3622 /* Assets.xcassets */,
 				1A80A22A2ABD31F2004A3622 /* Preview Content */,
 			);
@@ -332,6 +333,7 @@
 			children = (
 				1A918D7B2C9FC1EE00F023AD /* PowerGloveConnectMacApp.swift */,
 				1A918D7D2C9FC1EE00F023AD /* ContentView.swift */,
+				1ADC4DCD2C9FD20800E57BB9 /* SynthView.swift */,
 				1A918D7F2C9FC1F000F023AD /* Assets.xcassets */,
 				1A918D842C9FC1F000F023AD /* PowerGloveConnectMac.entitlements */,
 				1A918D812C9FC1F000F023AD /* Preview Content */,
@@ -351,6 +353,7 @@
 		1ADC4DAF2C9FC30100E57BB9 /* Sharred */ = {
 			isa = PBXGroup;
 			children = (
+				1A73DBF42AC943AA005F833E /* Utility */,
 				1A73DBF22AC9433A005F833E /* UI Components */,
 				1A73DBEF2AC94154005F833E /* Service */,
 			);
@@ -557,6 +560,7 @@
 				1ADC4DC62C9FC79700E57BB9 /* GloveStatusViewModel.swift in Sources */,
 				1ADC4DC32C9FC6C300E57BB9 /* PitchArchView.swift in Sources */,
 				1ADC4DC42C9FC6C300E57BB9 /* LetterButtonView.swift in Sources */,
+				1ADC4DCE2C9FD20800E57BB9 /* SynthView.swift in Sources */,
 				1ADC4DC52C9FC6C300E57BB9 /* CircleDialView.swift in Sources */,
 				1ADC4DB72C9FC41000E57BB9 /* GloveDataService.swift in Sources */,
 				1ADC4DC72C9FC79A00E57BB9 /* GloveStatusView.swift in Sources */,
