@@ -38,7 +38,9 @@ struct PowerGloveStatusView: View {
             HStack {
                 LetterButtonView(color: .red, text: "A", size: 80, isPressed: gloveState.button2State)
                 LetterButtonView(color: .yellow, text: "B", size: 80, isPressed: gloveState.button3State)
-                LetterButtonView(color: .green, text: "C", size: 80, isPressed: gloveState.button1State)
+                LetterButtonView(color: .green, text: "X", size: 80, isPressed: gloveState.button1State)
+                LetterButtonView(color: .blue, text: "Y", size: 80, isPressed: gloveState.button4State)
+                
             }
         }
 
@@ -55,6 +57,7 @@ struct PowerGloveStatusView_Previews: PreviewProvider {
                                     button1State: true,
                                     button2State: false,
                                     button3State: false,
+                                    button4State: false,
                                     gyroX: 34,
                                     gyroY: 12,
                                     gyroZ: 32,

@@ -1,32 +1,39 @@
-const int sensorPin = A0;  // pin where your sensor is connected
-int sensorValue = 0; 
+const int sensorPin0 = A0;  // pin where your sensor is connected
+const int sensorPin1 = A1;  // pin where your sensor is connected
+const int sensorPin2 = A2;  // pin where your sensor is connected
+const int sensorPin3 = A3;  // pin where your sensor is connected
+
+int sensorValue0 = 0; 
+int sensorValue1 = 0; 
+int sensorValue2 = 0; 
+int sensorValue3 = 0; 
+
 int minValue = 1023;  // initialize to the maximum possible value
 int maxValue = 0;     // initialize to the minimum possible value
 
 void setup() {
   Serial.begin(9600);  // start serial communication at 9600 bps
-  // pinMode(sensorPin, INPUT);
+  pinMode(sensorPin0, INPUT);
+  pinMode(sensorPin1, INPUT);
+  pinMode(sensorPin2, INPUT);
+  pinMode(sensorPin3, INPUT);
 }
 
 void loop() {
-  sensorValue = analogRead(sensorPin);  // read the sensor value
+  sensorValue0 = analogRead(sensorPin0);  // read the sensor value
+  sensorValue1 = analogRead(sensorPin1);  // read the sensor value
+  sensorValue2 = analogRead(sensorPin2);  // read the sensor value
+  sensorValue3 = analogRead(sensorPin3);  // read the sensor value
+  
+  Serial.print("0: "); 
+  Serial.print(sensorValue0);
+  Serial.print("1: "); 
+  Serial.print(sensorValue1);
+  Serial.print("2: "); 
+  Serial.print(sensorValue2);
+  Serial.print("3: "); 
+  Serial.println(sensorValue3);
+ 
 
-  // Check if this reading is a new minimum
-  if (sensorValue < minValue) {
-    minValue = sensorValue;
-  }
-
-  // Check if this reading is a new maximum
-  if (sensorValue > maxValue) {
-    maxValue = sensorValue;
-  }
-
-  Serial.print("Current reading: "); 
-  Serial.print(sensorValue);
-  Serial.print("\t Min reading: ");
-  Serial.print(minValue);
-  Serial.print("\t Max reading: ");
-  Serial.println(maxValue);
-
-  delay(500);  // wait half a second before the next reading
+  delay(500); 
 }

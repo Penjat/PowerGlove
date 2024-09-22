@@ -3,12 +3,12 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
  #include <MPU6050_light.h>
-#include <Adafruit_Sensor.h>
+// #include <Adafruit_Sensor.h>
 #include <SoftwareSerial.h>
 
 
 // Bluetooth
-SoftwareSerial hm10(6, 8);
+SoftwareSerial hm10(11, 12);
 
 // LCD
 #define SCREEN_WIDTH 128
@@ -18,13 +18,15 @@ SoftwareSerial hm10(6, 8);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Buttons
-#define BUTTON_PIN_0 10
-#define BUTTON_PIN_1 11
-#define BUTTON_PIN_2 12
+#define BUTTON_PIN_0 4
+#define BUTTON_PIN_1 5
+#define BUTTON_PIN_2 6
+#define BUTTON_PIN_3 7
 
 byte buttonState0 = 0;
 byte buttonState1 = 0;
 byte buttonState2 = 0;
+byte buttonState3 = 0;
 
 
 // Finger sensors
@@ -106,6 +108,7 @@ void setUpButtons() {
   pinMode(BUTTON_PIN_0, INPUT_PULLUP);
   pinMode(BUTTON_PIN_1, INPUT_PULLUP);
   pinMode(BUTTON_PIN_2, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_3, INPUT_PULLUP);
 }
 
 // ----------------- LOOP -----------------
@@ -149,6 +152,7 @@ void updateSensors() {
   buttonState0 = digitalRead(BUTTON_PIN_0);
   buttonState1 = digitalRead(BUTTON_PIN_1);
   buttonState2 = digitalRead(BUTTON_PIN_2);
+  buttonState3 = digitalRead(BUTTON_PIN_3);
 }
 
 void updateCalibration() {
@@ -202,7 +206,7 @@ void updateEncoder() {
 
 void sendSensorData() {
 
-  byte data[12]; 
+  byte data[13]; 
 
   // Start Marker
   data[0] = 0x02;
@@ -210,7 +214,7 @@ void sendSensorData() {
   data[1] = map(sensorValue0, min_2, max_2, 0, 255);
   data[2] = map(sensorValue1, min_1, max_1, 0, 255);
   data[3] = map(sensorValue2, min_3, max_3, 0, 255);
-  data[4] = (buttonState0 << 2) | (buttonState1 << 1) | buttonState2;
+  data[4] = (buttonState0 << 3) | (buttonState1 << 2) | (buttonState2 << 1) | buttonState3;
 
   data[5] = map(mpu.getAngleX(), -180, 180, 0, 255);
   data[6] = map(mpu.getAngleY(), -180, 180, 0, 255);
@@ -218,11 +222,13 @@ void sendSensorData() {
   data[8] = mpu.getAccX();
   data[9] = mpu.getAccY();
   data[10] = mpu.getAccZ();
+  data[11] = counter;
 
   // End marker
-  data[11] = 0x03;
+  data[12] = 0x03;
 
-  hm10.write(data, 12);
+  hm10.write(data, 13);
+  Serial.println("updating data...");
 }
 
 
@@ -230,7 +236,8 @@ void updateDisplay() {
   if (counter % 2 == 0) {
     buttonsDisplay();
   } else {
-    gyroDisplay();
+    buttonsDisplay();
+    // gyroDisplay();
   }
 }
  
@@ -254,44 +261,60 @@ void buttonsDisplay() {
   display.setTextSize(2);
 
 
-  // A
-  if (buttonState1 == LOW) {
-    display.setTextColor(SSD1306_BLACK);
-    display.fillCircle(display.width() / 2 + 12, 10, 10, SSD1306_WHITE);
-  }
-  else {
-    display.setTextColor(SSD1306_WHITE);
-    display.drawCircle(display.width() / 2 + 12, 10, 10, SSD1306_WHITE);
+// Define a variable for the circle radius
+int circleRadius = 8; // You can change this value to resize all circles at once
 
-  }
-  display.setCursor(72, 4);
-  display.println(F("A"));
+// A
+if (buttonState1 == LOW) {
+  display.setTextColor(SSD1306_BLACK);
+  display.fillCircle(display.width() / 2 + 8, 10, circleRadius, SSD1306_WHITE);
+}
+else {
+  display.setTextColor(SSD1306_WHITE);
+  display.drawCircle(display.width() / 2 + 8, 10, circleRadius, SSD1306_WHITE);
+}
+display.setCursor(68, 4); // Adjusted cursor for button A
+display.println(F("A"));
 
-  // B
-  if (buttonState2 == LOW) {
-    display.setTextColor(SSD1306_BLACK);
-    display.fillCircle(display.width() / 2 + 32, 10, 10, SSD1306_WHITE);
-  }
-  else {
-    display.setTextColor(SSD1306_WHITE);
-    display.drawCircle(display.width() / 2 + 32, 10, 10, SSD1306_WHITE);
+// B
+if (buttonState2 == LOW) {
+  display.setTextColor(SSD1306_BLACK);
+  display.fillCircle(display.width() / 2 + 24, 10, circleRadius, SSD1306_WHITE);
+}
+else {
+  display.setTextColor(SSD1306_WHITE);
+  display.drawCircle(display.width() / 2 + 24, 10, circleRadius, SSD1306_WHITE);
+}
+display.setCursor(84, 4); // Adjusted cursor for button B
+display.println(F("B"));
 
-  }
-  display.setCursor(92, 4);
-  display.println(F("B"));
+// C
+if (buttonState0 == LOW) {
+  display.setTextColor(SSD1306_BLACK);
+  display.fillCircle(display.width() / 2 + 40, 10, circleRadius, SSD1306_WHITE);
+}
+else {
+  display.setTextColor(SSD1306_WHITE);
+  display.drawCircle(display.width() / 2 + 40, 10, circleRadius, SSD1306_WHITE);
+}
+display.setCursor(100, 4); // Adjusted cursor for button C
+display.println(F("C"));
 
-  // C
-  if (buttonState0 == LOW) {
-    display.setTextColor(SSD1306_BLACK);
-    display.fillCircle(display.width() / 2 + 52, 10, 10, SSD1306_WHITE);
-  }
-  else {
-    display.setTextColor(SSD1306_WHITE);
-    display.drawCircle(display.width() / 2 + 52, 10, 10, SSD1306_WHITE);
+// D (New Button)
+if (buttonState3 == LOW) {
+  display.setTextColor(SSD1306_BLACK);
+  display.fillCircle(display.width() / 2 + 56, 10, circleRadius, SSD1306_WHITE);
+}
+else {
+  display.setTextColor(SSD1306_WHITE);
+  display.drawCircle(display.width() / 2 + 56, 10, circleRadius, SSD1306_WHITE);
+}
+display.setCursor(116, 4); // Adjusted cursor for button D
+display.println(F("D"));
 
-  }
-  display.setCursor(112, 4);
-  display.println(F("C"));
+
+  
+
 
 
   display.setCursor(0, 0);

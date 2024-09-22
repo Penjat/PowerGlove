@@ -91,6 +91,7 @@ extension CentralService: CBPeripheralDelegate {
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let error = error {
+            print("error")
             return
         }
         

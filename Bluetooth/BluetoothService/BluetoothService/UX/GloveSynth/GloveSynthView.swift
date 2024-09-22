@@ -63,6 +63,7 @@ struct GloveSynthView: View {
             button1State: false,
             button2State: false,
             button3State: false,
+            button4State: false,
             gyroX: 0,
             gyroY: 0,
             gyroZ: 0,
